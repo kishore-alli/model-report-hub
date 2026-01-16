@@ -1,15 +1,15 @@
 import { Model, Report, ExecutiveSummary, FooterNote, Analysis, ActionPlan } from '@/types/mpm';
 
 export const mockModels: Model[] = [
-  { id: '1', name: 'Credit Risk Model', description: 'PD/LGD model for retail portfolio' },
-  { id: '2', name: 'Market Risk Model', description: 'VaR calculation model' },
-  { id: '3', name: 'Fraud Detection Model', description: 'Real-time fraud scoring' },
-  { id: '4', name: 'Customer Churn Model', description: 'Predictive churn analysis' },
+  { id: '1', name: 'CCFA Severity Model', description: 'PD/LGD model for retail portfolio' },
+  { id: '2', name: 'Borrower Behavior Model', description: 'VaR calculation model' },
+  { id: '3', name: 'Integrator Model', description: 'Real-time fraud scoring' },
+  { id: '4', name: 'RVI Model', description: 'Predictive churn analysis' },
 ];
 
 export const mockReports: Report[] = [
-  { id: '1', modelId: '1', name: 'Q4 2024 Performance Report', reportDate: '2024-12-31' },
-  { id: '2', modelId: '1', name: 'Q3 2024 Performance Report', reportDate: '2024-09-30' },
+  { id: '1', modelId: '1', name: '2025 Q3', reportDate: '2024-12-31' },
+  { id: '2', modelId: '1', name: '2025 Q4', reportDate: '2024-09-30' },
   { id: '3', modelId: '2', name: 'Annual Review 2024', reportDate: '2024-12-31' },
   { id: '4', modelId: '3', name: 'Monthly Report - December', reportDate: '2024-12-31' },
   { id: '5', modelId: '4', name: 'Q4 2024 Analysis', reportDate: '2024-12-31' },
