@@ -1,57 +1,62 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Save, ChevronDown, ChevronUp } from 'lucide-react';
-import { Analysis } from '@/types/mpm';
-import { mockAnalyses } from '@/data/mockData';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Trash2, Save } from 'lucide-react';
+import { AnalysisSection as AnalysisSectionType, AnalysisEntry } from '@/types/mpm';
+import { mockAnalysisSections, mockAnalysisEntries } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface AnalysisSectionProps {
   reportId: string;
 }
 
+const levelOptions = ['High', 'Medium', 'Low'];
+
 export function AnalysisSection({ reportId }: AnalysisSectionProps) {
   const { toast } = useToast();
-  const [analyses, setAnalyses] = useState<Analysis[]>([]);
-  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
+  const [sections, setSections] = useState<AnalysisSectionType[]>([]);
+  const [selectedSectionId, setSelectedSectionId] = useState<string>('');
+  const [entries, setEntries] = useState<AnalysisEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const reportAnalyses = mockAnalyses.filter((a) => a.reportId === reportId);
-    setAnalyses(reportAnalyses);
-    setOpenItems(new Set(reportAnalyses.map((a) => a.id)));
+    const reportSections = mockAnalysisSections.filter((s) => s.reportId === reportId);
+    setSections(reportSections);
+    if (reportSections.length > 0) {
+      setSelectedSectionId(reportSections[0].id);
+    } else {
+      setSelectedSectionId('');
+    }
   }, [reportId]);
 
-  const toggleItem = (id: string) => {
-    const newOpen = new Set(openItems);
-    if (newOpen.has(id)) {
-      newOpen.delete(id);
+  useEffect(() => {
+    if (selectedSectionId) {
+      const sectionEntries = mockAnalysisEntries.filter((e) => e.analysisSectionId === selectedSectionId);
+      setEntries(sectionEntries);
     } else {
-      newOpen.add(id);
+      setEntries([]);
     }
-    setOpenItems(newOpen);
-  };
+  }, [selectedSectionId]);
 
-  const addAnalysis = () => {
-    const newAnalysis: Analysis = {
+  const addEntry = () => {
+    if (!selectedSectionId) return;
+    const newEntry: AnalysisEntry = {
       id: `temp-${Date.now()}`,
-      reportId,
-      title: '',
-      content: '',
+      analysisSectionId: selectedSectionId,
+      analysis: '',
+      level: 'Medium',
     };
-    setAnalyses([...analyses, newAnalysis]);
-    setOpenItems(new Set([...openItems, newAnalysis.id]));
+    setEntries([...entries, newEntry]);
   };
 
-  const updateAnalysis = (id: string, field: keyof Analysis, value: string) => {
-    setAnalyses(analyses.map((a) => (a.id === id ? { ...a, [field]: value } : a)));
+  const updateEntry = (id: string, field: keyof AnalysisEntry, value: string) => {
+    setEntries(entries.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
   };
 
-  const removeAnalysis = (id: string) => {
-    setAnalyses(analyses.filter((a) => a.id !== id));
+  const removeEntry = (id: string) => {
+    setEntries(entries.filter((e) => e.id !== id));
   };
 
   const handleSave = async () => {
@@ -60,20 +65,22 @@ export function AnalysisSection({ reportId }: AnalysisSectionProps) {
     setIsLoading(false);
     toast({
       title: 'Saved',
-      description: 'Analysis sections have been updated.',
+      description: 'Analysis entries have been updated.',
     });
   };
+
+  const selectedSection = sections.find((s) => s.id === selectedSectionId);
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Analysis</CardTitle>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={addAnalysis}>
+          <Button variant="outline" onClick={addEntry} disabled={!selectedSectionId}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Section
+            Add Entry
           </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
+          <Button onClick={handleSave} disabled={isLoading || !selectedSectionId}>
             <Save className="h-4 w-4 mr-2" />
             {isLoading ? 'Saving...' : 'Save'}
           </Button>
@@ -81,66 +88,69 @@ export function AnalysisSection({ reportId }: AnalysisSectionProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {analyses.length === 0 ? (
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium">Analysis Section:</label>
+            <Select value={selectedSectionId} onValueChange={setSelectedSectionId}>
+              <SelectTrigger className="w-[280px]">
+                <SelectValue placeholder="Select an analysis section..." />
+              </SelectTrigger>
+              <SelectContent>
+                {sections.map((section) => (
+                  <SelectItem key={section.id} value={section.id}>
+                    {section.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {!selectedSectionId ? (
             <p className="text-muted-foreground text-center py-8">
-              No analysis sections yet. Click "Add Section" to create one.
+              Please select an analysis section to view and edit entries.
+            </p>
+          ) : entries.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">
+              No entries for "{selectedSection?.name}". Click "Add Entry" to create one.
             </p>
           ) : (
-            analyses.map((analysis) => (
-              <Collapsible
-                key={analysis.id}
-                open={openItems.has(analysis.id)}
-                onOpenChange={() => toggleItem(analysis.id)}
-              >
-                <div className="border rounded-lg">
-                  <CollapsibleTrigger asChild>
-                    <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-accent/50">
-                      <div className="flex items-center gap-3 flex-1">
-                        {openItems.has(analysis.id) ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                        <span className="font-medium">
-                          {analysis.title || 'Untitled Section'}
-                        </span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeAnalysis(analysis.id);
-                        }}
+            entries.map((entry) => (
+              <div key={entry.id} className="border rounded-lg p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 space-y-3">
+                    <Textarea
+                      value={entry.analysis}
+                      onChange={(e) => updateEntry(entry.id, 'analysis', e.target.value)}
+                      placeholder="Enter analysis..."
+                      className="min-h-[80px]"
+                    />
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium">Level:</label>
+                      <Select
+                        value={entry.level}
+                        onValueChange={(value) => updateEntry(entry.id, 'level', value)}
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {levelOptions.map((level) => (
+                            <SelectItem key={level} value={level}>
+                              {level}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="p-4 pt-0 space-y-3">
-                      <div>
-                        <label className="text-sm font-medium">Title</label>
-                        <Input
-                          value={analysis.title}
-                          onChange={(e) => updateAnalysis(analysis.id, 'title', e.target.value)}
-                          placeholder="Section title..."
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Content</label>
-                        <Textarea
-                          value={analysis.content}
-                          onChange={(e) => updateAnalysis(analysis.id, 'content', e.target.value)}
-                          placeholder="Analysis content..."
-                          className="mt-1 min-h-[150px]"
-                        />
-                      </div>
-                    </div>
-                  </CollapsibleContent>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeEntry(entry.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
                 </div>
-              </Collapsible>
+              </div>
             ))
           )}
         </div>
