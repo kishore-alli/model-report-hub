@@ -11,10 +11,12 @@ export interface Report {
   reportDate?: string;
 }
 
-export interface ExecutiveSummary {
+export interface ExecutiveSummaryEntry {
   id: string;
   reportId: string;
-  content: string;
+  summary: string;
+  level: string;
+  sequence: number;
 }
 
 export interface FooterNote {
@@ -24,17 +26,22 @@ export interface FooterNote {
   orderIndex: number;
 }
 
-export interface Analysis {
+export interface AnalysisSection {
   id: string;
   reportId: string;
-  title: string;
-  content: string;
+  name: string;
+}
+
+export interface AnalysisEntry {
+  id: string;
+  analysisSectionId: string;
+  analysis: string;
+  level: string;
 }
 
 export interface ActionPlan {
   id: string;
   reportId: string;
-  title: string;
   description: string;
   status: 'pending' | 'in-progress' | 'completed';
   dueDate?: string;

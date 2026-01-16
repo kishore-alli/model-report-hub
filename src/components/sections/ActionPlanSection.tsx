@@ -40,7 +40,6 @@ export function ActionPlanSection({ reportId }: ActionPlanSectionProps) {
     const newPlan: ActionPlan = {
       id: `temp-${Date.now()}`,
       reportId,
-      title: '',
       description: '',
       status: 'pending',
       dueDate: '',
@@ -93,12 +92,6 @@ export function ActionPlanSection({ reportId }: ActionPlanSectionProps) {
                 <div className="flex items-start justify-between">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3">
-                      <Input
-                        value={plan.title}
-                        onChange={(e) => updatePlan(plan.id, 'title', e.target.value)}
-                        placeholder="Action title..."
-                        className="flex-1"
-                      />
                       <Badge className={statusColors[plan.status]}>
                         {statusLabels[plan.status]}
                       </Badge>
